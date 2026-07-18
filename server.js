@@ -315,14 +315,11 @@ app.get("/transfer", async (req, res) => {
       console.log("Playlist leída:", sourcePlaylist.data.name);
 
       // Leer canciones
-      const tracksResponse = await axios.get(
-        `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-        {
-          headers: {
-            Authorization: `Bearer ${req.session.accessToken}`
-          }
-        }
-      );
+      const trackUris = sourcePlaylist.data.items.items
+  .filter(t => t.item && t.item.uri)
+  .map(t => t.item.uri);
+
+console.log("URIS:", trackUris.length);
 
       console.log("Canciones encontradas:",
         tracksResponse.data.items.length
