@@ -316,6 +316,18 @@ console.log("OWNER:", sourcePlaylist.body.owner.id);
 
 const me = await spotifyApi.getMe();
 
+const savedTracks = await axios.get(
+  "https://api.spotify.com/v1/me/tracks?limit=1",
+  {
+    headers: {
+      Authorization: `Bearer ${req.session.accessToken}`
+    }
+  }
+);
+
+res.send("<pre>" + JSON.stringify(savedTracks.data, null, 2) + "</pre>");
+return;
+
 console.log("USUARIO LOGUEADO:", me.body.id);
 
 console.log("PLAYLIST ID:", playlistId);
