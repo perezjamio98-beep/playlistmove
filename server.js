@@ -272,7 +272,6 @@ app.get("/connect-destination", (req, res) => {
 });
 
 app.get("/transfer", async (req, res) => {
-
   try {
 
     const selected = Array.isArray(req.session.selectedPlaylists)
@@ -295,144 +294,117 @@ app.get("/transfer", async (req, res) => {
 
     for (const playlistId of selected) {
 
-  resultado += `Procesando ${playlistId}<br>`;
-
-  // Saltaremos "liked" por ahora
-  if (playlistId === "liked") {
-    resultado += "❤️ Canciones que te gustan (se implementará después)<br><br>";
-    continue;
-  }
-
-console.log("PASO 1");
-
-const sourcePlaylist = await axios.get(
-  `https://api.spotify.com/v1/playlists/${playlistId}`,
-  {
-    headers: {
-      Authorization: `Bearer ${req.session.accessToken}`
-    }
-  }
-);
-
-res.send("<pre>" + JSON.stringify(sourcePlaylist.data, null, 2) + "</pre>");
-return;
-
-  
-
-console.log("PASO 1 OK");
-
-console.log("OWNER:", sourcePlaylist.body.owner.id);
-
-const me = await spotifyApi.getMe();
-
-const savedTracks = await axios.get(
-  "https://api.spotify.com/v1/me/tracks?limit=1",
-  {
-    headers: {
-      Authorization: `Bearer ${req.session.accessToken}`
-    }
-  }
-);
-
-res.send("<pre>" + JSON.stringify(savedTracks.data, null, 2) + "</pre>");
-return;
-
-console.log("USUARIO LOGUEADO:", me.body.id);
-
-console.log("PLAYLIST ID:", playlistId);
-
-console.log("PASO 2");
-
-try {
-
-  const tracksResponse = await axios.get(
-    `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-    {
-      headers: {
-        Authorization: `Bearer ${req.session.accessToken}`
+      if (playlistId === "liked") {
+        resultado += "❤️ Canciones que te gustan (pendiente)<br><br>";
+        continue;
       }
-    }
-  );
 
-  res.send("<pre>" + JSON.stringify(tracksResponse.data, null, 2) + "</pre>");
-  return;
+      console.log("==========");
+      console.log("PLAYLIST:", playlistId);
 
-} catch (e) {
+      // Leer información de la playlist
+      const sourcePlaylist = await axios.get(
+        `https://api.spotify.com/v1/playlists/${playlistId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.session.accessToken}`
+          }
+        }
+      );
 
-  res.send("<pre>" + JSON.stringify(e.response?.data || e.message, null, 2) + "</pre>");
-  return;
+      console.log("Playlist leída:", sourcePlaylist.data.name);
 
-}
+      // Leer canciones
+      const tracksResponse = await axios.get(
+        `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+        {
+          headers: {
+            Authorization: `Bearer ${req.session.accessToken}`
+          }
+        }
+      );
 
-console.log("PASO 2 OK");
+      console.log("Canciones encontradas:",
+        tracksResponse.data.items.length
+      );
 
-const trackUris =
-  tracksResponse.data.items.items
-    .filter(t => t.item)
-    .map(t => t.item.uri);
+      const trackUris = tracksResponse.data.items
+        .filter(t => t.item && t.item.uri)
+        .map(t => t.item.uri);
 
-console.log("PASO 3");
+      console.log("URIS:", trackUris.length);
 
-const newPlaylist =
-  await destinationApi.createPlaylist(
-    sourcePlaylist.body.name,
-    {
-      description: sourcePlaylist.body.description || "",
-      public: sourcePlaylist.body.public
-    }
-  );
+      // Crear playlist destino
+      const newPlaylist =
+        await destinationApi.createPlaylist(
+          sourcePlaylist.data.name,
+          {
+            description:
+              sourcePlaylist.data.description || "",
+            public:
+              sourcePlaylist.data.public
+          }
+        );
 
-console.log("PASO 3 OK");
+      console.log("Playlist creada:",
+        newPlaylist.body.id);
 
-if (trackUris.length > 0) {
+      // Agregar canciones
+      if (trackUris.length > 0) {
 
-  console.log("PASO 4");
+        await axios.post(
+          `https://api.spotify.com/v1/playlists/${newPlaylist.body.id}/tracks`,
+          {
+            uris: trackUris
+          },
+          {
+            headers: {
+              Authorization:
+                `Bearer ${req.session.destinationAccessToken}`,
+              "Content-Type":
+                "application/json"
+            }
+          }
+        );
 
-  await axios.post(
-    `https://api.spotify.com/v1/playlists/${newPlaylist.body.id}/tracks`,
-    {
-      uris: trackUris
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${req.session.destinationAccessToken}`,
-        "Content-Type": "application/json"
+        console.log("Canciones agregadas");
       }
+
+      resultado += `✅ ${sourcePlaylist.data.name}<br>`;
     }
-  );
-
-  console.log("PASO 4 OK");
-
-}
-
-  resultado += `✅ Copiada: ${sourcePlaylist.body.name}<br><br>`;
-
-}
 
     res.send(`
-      <h1>Transferencia iniciada</h1>
+      <h1>Transferencia completada</h1>
       ${resultado}
     `);
 
   } catch (err) {
 
-  console.log("===== ERROR EN /transfer =====");
-  console.log(err);
+    console.log("===== ERROR =====");
 
-  if (err.body) {
-    console.log("BODY:");
-    console.log(JSON.stringify(err.body, null, 2));
+    if (err.response) {
+      console.log(err.response.status);
+      console.log(
+        JSON.stringify(err.response.data, null, 2)
+      );
+    } else if (err.body) {
+      console.log(
+        JSON.stringify(err.body, null, 2)
+      );
+    } else {
+      console.log(err);
+    }
+
+    res.send(
+      "<pre>" +
+      JSON.stringify(
+        err.response?.data || err.body || err.message,
+        null,
+        2
+      ) +
+      "</pre>"
+    );
   }
-
-  if (err.response && err.response.data) {
-    console.log("RESPONSE:");
-    console.log(JSON.stringify(err.response.data, null, 2));
-  }
-
-  res.send("<pre>" + (err.stack || err.message || String(err)) + "</pre>");
-
-}
-
 });
 
 app.get("/debug", (req, res) => {
