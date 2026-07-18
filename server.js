@@ -312,13 +312,19 @@ console.log("PASO 1 OK");
 
 console.log("PASO 2");
 
-const tracks =
-  await spotifyApi.getPlaylistTracks(playlistId);
+const tracksResponse = await axios.get(
+  `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+  {
+    headers: {
+      Authorization: `Bearer ${req.session.accessToken}`
+    }
+  }
+);
 
 console.log("PASO 2 OK");
 
 const trackUris =
-  tracks.body.items
+  tracksResponse.data.items
     .filter(t => t.track)
     .map(t => t.track.uri);
 
