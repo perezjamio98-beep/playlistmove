@@ -310,6 +310,14 @@ const sourcePlaylist =
 
 console.log("PASO 1 OK");
 
+console.log("OWNER:", sourcePlaylist.body.owner.id);
+
+const me = await spotifyApi.getMe();
+
+console.log("USUARIO LOGUEADO:", me.body.id);
+
+console.log("PLAYLIST ID:", playlistId);
+
 console.log("PASO 2");
 
 const tracksResponse = await axios.get(
