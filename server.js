@@ -303,47 +303,58 @@ app.get("/transfer", async (req, res) => {
     continue;
   }
 
- // Leer la información de la playlist
+console.log("PASO 1");
+
 const sourcePlaylist =
   await spotifyApi.getPlaylist(playlistId);
 
-// Leer las canciones de la playlist
+console.log("PASO 1 OK");
+
+console.log("PASO 2");
+
 const tracks =
   await spotifyApi.getPlaylistTracks(playlistId);
 
-// Obtener las URIs
+console.log("PASO 2 OK");
+
 const trackUris =
   tracks.body.items
     .filter(t => t.track)
     .map(t => t.track.uri);
 
-  // Crear la playlist en la cuenta destino
-  const newPlaylist =
-    await destinationApi.createPlaylist(
-      sourcePlaylist.body.name,
-      {
-        description: sourcePlaylist.body.description || "",
-        public: sourcePlaylist.body.public
+console.log("PASO 3");
+
+const newPlaylist =
+  await destinationApi.createPlaylist(
+    sourcePlaylist.body.name,
+    {
+      description: sourcePlaylist.body.description || "",
+      public: sourcePlaylist.body.public
+    }
+  );
+
+console.log("PASO 3 OK");
+
+if (trackUris.length > 0) {
+
+  console.log("PASO 4");
+
+  await axios.post(
+    `https://api.spotify.com/v1/playlists/${newPlaylist.body.id}/tracks`,
+    {
+      uris: trackUris
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${req.session.destinationAccessToken}`,
+        "Content-Type": "application/json"
       }
-    );
+    }
+  );
 
-  // Agregar las canciones
-  if (trackUris.length > 0) {
+  console.log("PASO 4 OK");
 
-    await axios.post(
-      `https://api.spotify.com/v1/playlists/${newPlaylist.body.id}/tracks`,
-      {
-        uris: trackUris
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${req.session.destinationAccessToken}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-  }
+}
 
   resultado += `✅ Copiada: ${sourcePlaylist.body.name}<br><br>`;
 
