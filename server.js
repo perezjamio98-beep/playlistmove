@@ -352,15 +352,22 @@ app.get("/transfer", async (req, res) => {
 
   } catch (err) {
 
-    console.log(err);
+  console.log("===== ERROR EN /transfer =====");
+  console.log(err);
 
-    res.send(
-      "<pre>" +
-      JSON.stringify(err.body || err, null, 2) +
-      "</pre>"
-    );
-
+  if (err.body) {
+    console.log("BODY:");
+    console.log(JSON.stringify(err.body, null, 2));
   }
+
+  if (err.response && err.response.data) {
+    console.log("RESPONSE:");
+    console.log(JSON.stringify(err.response.data, null, 2));
+  }
+
+  res.send("<pre>" + (err.stack || err.message || String(err)) + "</pre>");
+
+}
 
 });
 
