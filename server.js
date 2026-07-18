@@ -307,6 +307,10 @@ app.get("/transfer", async (req, res) => {
   const sourcePlaylist =
     await spotifyApi.getPlaylist(playlistId);
 
+    console.log("PLAYLIST ID:", playlistId);
+console.log("PLAYLIST BODY:");
+console.log(JSON.stringify(sourcePlaylist.body, null, 2));
+
   // Obtener las URIs de las canciones
   const trackUris =
     sourcePlaylist.body.tracks.items
