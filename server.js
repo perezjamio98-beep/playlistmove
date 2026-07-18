@@ -694,6 +694,53 @@ app.get("/test-add-own-track", async (req, res) => {
 
 });
 
+app.get("/test-empty-add", async (req, res) => {
+
+  try {
+
+    const destinationApi =
+      new SpotifyWebApi({
+        clientId: process.env.SPOTIFY_CLIENT_ID,
+        clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+        redirectUri: process.env.SPOTIFY_REDIRECT_URI
+      });
+
+    destinationApi.setAccessToken(
+      req.session.destinationAccessToken
+    );
+
+    const playlist =
+      await destinationApi.createPlaylist(
+        "Test Empty",
+        { public: false }
+      );
+
+    const result =
+      await destinationApi.addTracksToPlaylist(
+        playlist.body.id,
+        []
+      );
+
+    res.send(
+      JSON.stringify(result.body, null, 2)
+    );
+
+  } catch (err) {
+
+    res.send(
+      "<pre>" +
+      JSON.stringify(
+        err.body || err,
+        null,
+        2
+      ) +
+      "</pre>"
+    );
+
+  }
+
+});
+
 app.listen(PORT, () => {
   console.log("Servidor iniciado en puerto " + PORT);
 });
