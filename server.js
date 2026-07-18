@@ -273,29 +273,48 @@ app.get("/connect-destination", (req, res) => {
 
 app.get("/transfer", async (req, res) => {
 
-  res.send(`
-    <h1>Transferencia</h1>
+  try {
 
-    <p>
-      Cuenta origen conectada ✅
-    </p>
+    const selected = Array.isArray(req.session.selectedPlaylists)
+      ? req.session.selectedPlaylists
+      : [req.session.selectedPlaylists];
 
-    <p>
-      Cuenta destino conectada ✅
-    </p>
+    spotifyApi.setAccessToken(req.session.accessToken);
 
-    <p>
-      Playlists seleccionadas:
-    </p>
+    const destinationApi = new SpotifyWebApi({
+      clientId: process.env.SPOTIFY_CLIENT_ID,
+      clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+      redirectUri: process.env.SPOTIFY_REDIRECT_URI
+    });
 
-    <pre>
-${JSON.stringify(
-  req.session.selectedPlaylists,
-  null,
-  2
-)}
-    </pre>
-  `);
+    destinationApi.setAccessToken(
+      req.session.destinationAccessToken
+    );
+
+    let resultado = "";
+
+    for (const playlistId of selected) {
+
+      resultado += `Procesando ${playlistId}<br>`;
+
+    }
+
+    res.send(`
+      <h1>Transferencia iniciada</h1>
+      ${resultado}
+    `);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.send(
+      "<pre>" +
+      JSON.stringify(err.body || err, null, 2) +
+      "</pre>"
+    );
+
+  }
 
 });
 
