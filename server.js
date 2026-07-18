@@ -295,9 +295,55 @@ app.get("/transfer", async (req, res) => {
 
     for (const playlistId of selected) {
 
-      resultado += `Procesando ${playlistId}<br>`;
+  resultado += `Procesando ${playlistId}<br>`;
 
-    }
+  // Saltaremos "liked" por ahora
+  if (playlistId === "liked") {
+    resultado += "❤️ Canciones que te gustan (se implementará después)<br><br>";
+    continue;
+  }
+
+  // Leer la playlist de origen
+  const sourcePlaylist =
+    await spotifyApi.getPlaylist(playlistId);
+
+  // Obtener las URIs de las canciones
+  const trackUris =
+    sourcePlaylist.body.tracks.items
+      .filter(t => t.track)
+      .map(t => t.track.uri);
+
+  // Crear la playlist en la cuenta destino
+  const newPlaylist =
+    await destinationApi.createPlaylist(
+      sourcePlaylist.body.name,
+      {
+        description: sourcePlaylist.body.description || "",
+        public: sourcePlaylist.body.public
+      }
+    );
+
+  // Agregar las canciones
+  if (trackUris.length > 0) {
+
+    await axios.post(
+      `https://api.spotify.com/v1/playlists/${newPlaylist.body.id}/tracks`,
+      {
+        uris: trackUris
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${req.session.destinationAccessToken}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+  }
+
+  resultado += `✅ Copiada: ${sourcePlaylist.body.name}<br><br>`;
+
+}
 
     res.send(`
       <h1>Transferencia iniciada</h1>
