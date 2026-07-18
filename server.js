@@ -314,16 +314,6 @@ console.log("PASO 1 OK");
 
 console.log("OWNER:", sourcePlaylist.body.owner.id);
 
-res.send(`
-<pre>
-OWNER: ${sourcePlaylist.body.owner.id}
-USUARIO: ${(await spotifyApi.getMe()).body.id}
-PLAYLIST: ${playlistId}
-</pre>
-`);
-
-return;
-
 const me = await spotifyApi.getMe();
 
 console.log("USUARIO LOGUEADO:", me.body.id);
