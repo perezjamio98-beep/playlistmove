@@ -332,14 +332,26 @@ console.log("PLAYLIST ID:", playlistId);
 
 console.log("PASO 2");
 
-const tracksResponse = await axios.get(
-  `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-  {
-    headers: {
-      Authorization: `Bearer ${req.session.accessToken}`
+try {
+
+  const tracksResponse = await axios.get(
+    `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
+    {
+      headers: {
+        Authorization: `Bearer ${req.session.accessToken}`
+      }
     }
-  }
-);
+  );
+
+  res.send("<pre>" + JSON.stringify(tracksResponse.data, null, 2) + "</pre>");
+  return;
+
+} catch (e) {
+
+  res.send("<pre>" + JSON.stringify(e.response?.data || e.message, null, 2) + "</pre>");
+  return;
+
+}
 
 console.log("PASO 2 OK");
 
