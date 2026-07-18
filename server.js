@@ -303,19 +303,19 @@ app.get("/transfer", async (req, res) => {
     continue;
   }
 
-  // Leer la playlist de origen
-  const sourcePlaylist =
-    await spotifyApi.getPlaylist(playlistId);
+ // Leer la información de la playlist
+const sourcePlaylist =
+  await spotifyApi.getPlaylist(playlistId);
 
-    console.log("PLAYLIST ID:", playlistId);
-console.log("PLAYLIST BODY:");
-console.log(JSON.stringify(sourcePlaylist.body, null, 2));
+// Leer las canciones de la playlist
+const tracks =
+  await spotifyApi.getPlaylistTracks(playlistId);
 
-  // Obtener las URIs de las canciones
-  const trackUris =
-    sourcePlaylist.body.tracks.items
-      .filter(t => t.track)
-      .map(t => t.track.uri);
+// Obtener las URIs
+const trackUris =
+  tracks.body.items
+    .filter(t => t.track)
+    .map(t => t.track.uri);
 
   // Crear la playlist en la cuenta destino
   const newPlaylist =
