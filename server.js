@@ -305,8 +305,17 @@ app.get("/transfer", async (req, res) => {
 
 console.log("PASO 1");
 
-const sourcePlaylist =
-  await spotifyApi.getPlaylist(playlistId);
+const sourcePlaylist = await axios.get(
+  `https://api.spotify.com/v1/playlists/${playlistId}`,
+  {
+    headers: {
+      Authorization: `Bearer ${req.session.accessToken}`
+    }
+  }
+);
+
+res.send("<pre>" + JSON.stringify(sourcePlaylist.data, null, 2) + "</pre>");
+return;
 
   
 
