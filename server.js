@@ -367,9 +367,9 @@ try {
 console.log("PASO 2 OK");
 
 const trackUris =
-  tracksResponse.data.items
-    .filter(t => t.track)
-    .map(t => t.track.uri);
+  tracksResponse.data.items.items
+    .filter(t => t.item)
+    .map(t => t.item.uri);
 
 console.log("PASO 3");
 
